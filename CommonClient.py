@@ -104,6 +104,11 @@ class ClientCommandProcessor(CommandProcessor):
             self.output("Unreadied.")
         asyncio.create_task(self.ctx.send_msgs([{"cmd": "StatusUpdate", "status": state}]), name="send StatusUpdate")
 
+    def _cmd_narcissist(self):
+        """Turn on "Narcissist" mode (only receive messages that relate to you)"""
+        self.ctx.is_narcissistic = not self.ctx.is_narcissistic
+        logger.info(f"Narcissistic Mode is now {self.ctx.is_narcissistic}")
+
     def default(self, raw: str):
         raw = self.ctx.on_user_say(raw)
         if raw:
@@ -141,6 +146,7 @@ class CommonContext():
         self.slot = None
         self.auth = None
         self.seed_name = None
+        self.is_narcissistic = False
 
         self.locations_checked: typing.Set[int] = set()  # local state
         self.locations_scouted: typing.Set[int] = set()
@@ -269,7 +275,11 @@ class CommonContext():
 
     def on_print_json(self, args: dict):
         if self.ui:
-            self.ui.print_json(args["data"])
+            item = args['item']
+            receiving_player_id = args['receiving']
+            sending_player_id = item.player
+            if not self.is_narcissistic or receiving_player_id == self.slot or sending_player_id == self.slot:
+                self.ui.print_json(args["data"])
         else:
             text = self.jsontotextparser(args["data"])
             logger.info(text)

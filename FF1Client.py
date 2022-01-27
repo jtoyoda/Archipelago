@@ -74,8 +74,12 @@ class FF1Context(CommonContext):
             sending_player_id = item.player
             sending_player_name = self.player_names[item.player]
             if print_type == 'Hint':
-                msg = f"Hint: Your {self.item_name_getter(item.item)} is at" \
-                      f" {self.player_names[item.player]}'s {self.location_name_getter(item.location)}"
+                if sending_player_id == self.slot:
+                    msg = f"Hint: Your {self.item_name_getter(item.item)} is at" \
+                          f" {self.player_names[item.player]}'s {self.location_name_getter(item.location)}"
+                else:
+                    msg = f"Hint: {receiving_player_name}'s {self.item_name_getter(item.item)} is at" \
+                          f" your {self.location_name_getter(item.location)}"
                 self._set_message(msg, item.item)
             elif print_type == 'ItemSend' and receiving_player_id != self.slot:
                 if sending_player_id == self.slot:
@@ -83,13 +87,14 @@ class FF1Context(CommonContext):
                         msg = f"You found your own {self.item_name_getter(item.item)}"
                     else:
                         msg = f"You sent {self.item_name_getter(item.item)} to {receiving_player_name}"
-                else:
+                    self._set_message(msg, item.item)
+                elif not self.is_narcissistic:
                     if receiving_player_id == sending_player_id:
                         msg = f"{sending_player_name} found their {self.item_name_getter(item.item)}"
                     else:
                         msg = f"{sending_player_name} sent {self.item_name_getter(item.item)} to " \
                               f"{receiving_player_name}"
-                self._set_message(msg, item.item)
+                    self._set_message(msg, item.item)
 
 
 def get_payload(ctx: FF1Context):
